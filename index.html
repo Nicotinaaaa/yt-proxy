@@ -39,12 +39,12 @@
                     rel: 0,
                     modestbranding: 1,
                     playsinline: 1,
-                    playlist: videoId,
-                    vq: 'hd1080'
+                    playlist: videoId
                 },
                 events: {
                     onReady: function() {
-                        player.setVolume(20);
+                        player.setVolume(30);
+                        player.setPlaybackQuality('highres');
                         if (player.isMuted()) player.unMute();
                     }
                 }
