@@ -43,9 +43,9 @@
                 },
                 events: {
                     onReady: function() {
-                        player.setVolume(30);
+                        player.unMute();
                         player.setPlaybackQuality('highres');
-                        if (player.isMuted()) player.unMute();
+                        player.setVolume(30);
                     }
                 }
             });
