@@ -1,92 +1,116 @@
-<!DOCTYPE html>
-<html lang="en">
+<![CDATA[<!DOCTYPE html>
+<html lang="it">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="referrer" content="strict-origin-when-cross-origin">
-    <title>Video Player</title>
-    <style>
-        * { margin: 0; padding: 0; box-sizing: border-box; }
-        html, body { width: 100%; height: 100%; background: #000; overflow: hidden; }
-        #player { width: 100%; height: 100%; }
-    </style>
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Raleway">
+    <!--Custom fonts-->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@700&display=swap" rel="stylesheet">
+    <!--Custom fonts-->
 </head>
-<body>
-    <div id="player"></div>
-    <script>
-        var tag = document.createElement('script');
-        tag.src = 'https://www.youtube.com/iframe_api';
-        var firstScriptTag = document.getElementsByTagName('script')[0];
-        firstScriptTag.parentNode.insertBefore(tag, firstScriptTag);
+<body class="sky noselect">
+    <div class="menu-container">
+        <div class="arrow-up">
+            <img src="img/ARROW_UP.png" width="1.75%">
+            <span class="menu-text">ALZA VOLUME</span>
+        </div>
+        <div class="arrow-down">
+            <img src="img/ARROW_DOWN.png" width="1.75%">
+            <span class="menu-text">ABBASSA VOLUME</span>
+        </div>
+        <div class="music-change">
+            <img src="img/ARROW_LEFT.png" width="1.75%">
+            <img src="img/ARROW_RIGHT.png" width="1.75%">
+            <span class="menu-text">CAMBIA MUSICA</span>
+        </div>
+        <div class="space">
+            <img src="img/SPACE.png" width="4%">
+            <span class="menu-text" id="text">MUTO</span>
+        </div>
+    </div>
 
-        var player;
-        function onYouTubeIframeAPIReady() {
-            var params = new URLSearchParams(window.location.search);
-            var videoId = params.get('v');
-            if (!videoId) {
-                document.body.innerHTML = '<p style="color:#fff;text-align:center;padding:20px;">No video specified</p>';
-                return;
-            }
-            player = new YT.Player('player', {
-                height: '100%',
-                width: '100%',
-                videoId: videoId,
-                playerVars: {
-                    autoplay: 1,
-                    mute: 1,
-                    controls: 0,
-                    loop: 1,
-                    rel: 0,
-                    modestbranding: 1,
-                    playsinline: 1,
-                    playlist: videoId
-                },
-                events: {
-                    onReady: function() {
-                        player.unMute();
-                        player.setVolume(30);
-                        // Forza la massima qualità disponibile
-                        player.setPlaybackQuality('highres');
-                        // Prova a impostare qualità ancora più alta dopo un secondo
-                        setTimeout(function() {
-                            var availableQualities = player.getAvailableQualityLevels();
-                            if (availableQualities && availableQualities.length > 0) {
-                                // Prende la qualità più alta disponibile
-                                var bestQuality = availableQualities[availableQualities.length - 1];
-                                player.setPlaybackQuality(bestQuality);
-                            }
-                        }, 2000);
-                    },
-                    onPlaybackQualityChange: function() {
-                        // Se la qualità cambia, prova a mantenerla alta
-                        var currentQuality = player.getPlaybackQuality();
-                        if (currentQuality !== 'highres' && currentQuality !== 'hd2160' && currentQuality !== 'hd1440' && currentQuality !== 'hd1080') {
-                            player.setPlaybackQuality('highres');
-                        }
-                    }
-                }
-            });
-        }
+    <div class="discord">
+        <a href="#" target="_blank" rel="noopener noreferrer"><img src="img/Discord.png"></a>
+    </div>
 
-        window.addEventListener('message', function(e) {
-            if (!player || !player.setVolume) return;
-            var data = e.data;
-            if (data === 'toggleMute') {
-                if (player.isMuted()) {
-                    player.unMute();
-                } else {
-                    player.mute();
-                }
-            } else if (data.type === 'setVolume') {
-                player.setVolume(data.volume);
-            } else if (data === 'volumeUp') {
-                var vol = Math.min(player.getVolume() + 10, 100);
-                player.setVolume(vol);
-            } else if (data === 'volumeDown') {
-                var vol = Math.max(player.getVolume() - 10, 0);
-                player.setVolume(vol);
-            }
-        });
-    </script>
+    <div class="tiktok">
+        <a href="#" target="_blank" rel="noopener noreferrer"><img src="img/Tiktok.png"></a>
+    </div>
+
+    <div class="website">
+        <a href="#" target="_blank" rel="noopener noreferrer"><img src="img/Site.png"></a>
+    </div>
+
+
+    <div id="circleG">
+        <div class="shaded-text">CONNESSIONE IN CORSO</div>
+        <div id="circleG_1" class="circleG"></div>
+        <div id="circleG_2" class="circleG"></div>
+        <div id="circleG_3" class="circleG"></div>
+    </div>
+
+    <div class="scroll-box">
+        <div class="header">
+            <span>FONDATORE</span>
+        </div>
+            <div class="person">
+                <img src="img/person1.png">
+                <span class="menu-text">Musa<br>
+                   <div class="owner-role"> FONDATORE </div>
+                </span>
+            </div>
+    </div>
+
+    <p class="namePlaceholder" id="namePlaceholder">
+        Benvenuto, <span style="color: #ff0000;"></span>! <span id="welcomeDisplay"></span>
+    </p>
+
+    <div class="textbox">
+        <div class="textboxh"><div class="heading-textbox">NEON UNDERGROUND STREET RACE</div></div>
+        <p>Benvenuto su <span class="blue-text">Neon Underground Street Race</span>, il server FiveM dove la velocità incontra lo stile. 
+            Corri nelle strade illuminate al neon della città, gareggia contro i migliori piloti e costruisci la tua reputazione 
+            nell'underground. <span class="blue-text">Tournament</span>, drift, drag race e molto altro ti aspettano.<br><br>
+         Unisciti alla community, personalizza le tue auto, esplora la mappa e vivi l'emozione della 
+         <span class="blue-text">street racing</span> come mai prima d'ora. La strada è tua!</p>
+    </div>
+<div class="load">
+    <div class="loader">
+        <div class="stroke"></div>
+        <div class="stroke"></div>
+        <div class="stroke"></div>
+      </div>
+
+    <div class="songname">
+          <div class="slide-right">
+            <p id="songname">Akacia - Electric [NCS Release]</p>
+          </div>
+    </div>
+</div>
+    
+    <div class="video-background video-container noselect" id="ytplayer">
+        <iframe 
+            src="https://nicotinaaaa.github.io/yt-proxy/index.html?v=-yEje4cQgOw" 
+            frameborder="0" 
+            allow="autoplay; encrypted-media; fullscreen" 
+            allowfullscreen
+            style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); min-width: 100%; min-height: 100%;">
+        </iframe>
+    </div>
+    
+    <div class="background noselect" class="noselect">
+        <div class="img-center" class="noselect">
+            <img src="logo/logo.png" width="300">
+        </div>
+    </div>
+
+
+    <div class="background">
+        <div class="img-center">
+        </div>
+    </div>
+
+    <script src="script/main.js"></script>
+    
 </body>
-</html>
+</html>]]>
