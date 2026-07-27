@@ -44,8 +44,25 @@
                 events: {
                     onReady: function() {
                         player.unMute();
-                        player.setPlaybackQuality('highres');
                         player.setVolume(30);
+                        // Forza la massima qualità disponibile
+                        player.setPlaybackQuality('highres');
+                        // Prova a impostare qualità ancora più alta dopo un secondo
+                        setTimeout(function() {
+                            var availableQualities = player.getAvailableQualityLevels();
+                            if (availableQualities && availableQualities.length > 0) {
+                                // Prende la qualità più alta disponibile
+                                var bestQuality = availableQualities[availableQualities.length - 1];
+                                player.setPlaybackQuality(bestQuality);
+                            }
+                        }, 2000);
+                    },
+                    onPlaybackQualityChange: function() {
+                        // Se la qualità cambia, prova a mantenerla alta
+                        var currentQuality = player.getPlaybackQuality();
+                        if (currentQuality !== 'highres' && currentQuality !== 'hd2160' && currentQuality !== 'hd1440' && currentQuality !== 'hd1080') {
+                            player.setPlaybackQuality('highres');
+                        }
                     }
                 }
             });
