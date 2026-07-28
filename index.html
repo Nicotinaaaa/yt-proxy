@@ -22,7 +22,7 @@
         }
 
         var embed = document.createElement('iframe');
-        embed.src = 'https://www.youtube.com/embed/' + videoId + '?autoplay=1&controls=0&loop=1&playlist=' + videoId + '&modestbranding=1&rel=0&enablejsapi=1&origin=' + encodeURIComponent(window.location.origin) + '&iv_load_policy=3&cc_load_policy=0';
+        embed.src = 'https://www.youtube.com/embed/' + videoId + '?autoplay=1&mute=1&controls=0&loop=1&playlist=' + videoId + '&modestbranding=1&rel=0&enablejsapi=1&origin=' + encodeURIComponent(window.location.origin) + '&iv_load_policy=3&cc_load_policy=0';
         embed.frameBorder = '0';
         embed.allow = 'autoplay';
         embed.allowFullscreen = false;
@@ -30,7 +30,7 @@
         document.getElementById('player').appendChild(embed);
 
         var currentVolume = 50;
-        var isMuted = false;
+        var isMuted = true;
 
         function sendCommand(func, args) {
             try {
@@ -41,6 +41,30 @@
                 }), '*');
             } catch(e) {}
         }
+
+        var ready = false;
+        var attempts = 0;
+        function tryUnmute() {
+            if (!ready) return;
+            if (attempts > 15) return;
+            attempts++;
+            sendCommand('unMute', []);
+            sendCommand('setVolume', [currentVolume]);
+            setTimeout(tryUnmute, 300);
+        }
+
+        window.addEventListener('message', function onEmbedReady(e) {
+            try {
+                var d = typeof e.data === 'string' ? JSON.parse(e.data) : e.data;
+                if (d.event === 'onReady' && d.info && d.info.videoId) {
+                    ready = true;
+                    setTimeout(tryUnmute, 500);
+                    window.removeEventListener('message', onEmbedReady);
+                }
+            } catch(e) {}
+        });
+
+        setTimeout(function() { ready = true; if (attempts === 0) { tryUnmute(); } }, 3000);
 
         document.addEventListener('keydown', function(e) {
             if (e.keyCode === 32) {
@@ -66,6 +90,7 @@
             } else if (data === 'toggleMute') {
                 isMuted = !isMuted;
                 sendCommand(isMuted ? 'mute' : 'unMute', []);
+                if (!isMuted) sendCommand('setVolume', [currentVolume]);
             } else if (data.type === 'setVolume') {
                 currentVolume = data.volume;
                 sendCommand('setVolume', [currentVolume]);
