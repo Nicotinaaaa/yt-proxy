@@ -14,92 +14,65 @@
 <body>
     <div id="player"></div>
     <script>
-        var tag = document.createElement('script');
-        tag.src = 'https://www.youtube.com/iframe_api';
-        var firstScriptTag = document.getElementsByTagName('script')[0];
-        firstScriptTag.parentNode.insertBefore(tag, firstScriptTag);
-
-        var player;
-        var videoId;
-        var currentVolume = 30;
-        var isMuted = true;
-
-        function setMaxQuality() {
-            if (!player || !player.setPlaybackQuality) return;
-            var qualities = ['highres', 'hd2160', 'hd1440', 'hd1080'];
-            for (var i = 0; i < qualities.length; i++) {
-                try {
-                    player.setPlaybackQuality(qualities[i]);
-                } catch(e) {}
-            }
+        var params = new URLSearchParams(window.location.search);
+        var videoId = params.get('v');
+        if (!videoId) {
+            document.body.innerHTML = '<p style="color:#fff;font-family:Arial;text-align:center;padding:20px;">No video specified</p>';
+            throw new Error('No video ID');
         }
 
-        function onYouTubeIframeAPIReady() {
-            var params = new URLSearchParams(window.location.search);
-            videoId = params.get('v');
-            if (!videoId) {
-                document.body.innerHTML = '<p style="color:#fff;font-family:Arial;text-align:center;padding:20px;">No video specified</p>';
-                return;
-            }
-            player = new YT.Player('player', {
-                height: '100%',
-                width: '100%',
-                videoId: videoId,
-                playerVars: {
-                    autoplay: 1,
-                    mute: 1,
-                    controls: 0,
-                    loop: 1,
-                    rel: 0,
-                    modestbranding: 1,
-                    playsinline: 1,
-                    iv_load_policy: 3,
-                    playlist: videoId,
-                    enablejsapi: 1,
-                    origin: window.location.origin
-                },
-                events: {
-                    onReady: function(event) {
-                        event.target.setVolume(50);
-                        setMaxQuality();
-                        setTimeout(function() {
-                            try {
-                                event.target.unMute();
-                                isMuted = false;
-                                try { window.parent.postMessage({ type: 'proxyReady' }, '*'); } catch(e) {}
-                            } catch(e) {}
-                        }, 1000);
-                        try { window.parent.postMessage({ type: 'proxyReady' }, '*'); } catch(e) {}
-                    },
-                    onStateChange: function(event) {
-                        if (event.data === YT.PlayerState.PLAYING || event.data === YT.PlayerState.BUFFERING) {
-                            setMaxQuality();
-                        }
-                    },
-                    onPlaybackQualityChange: function(event) {
-                        setMaxQuality();
-                    }
-                }
-            });
+        var embed = document.createElement('iframe');
+        embed.src = 'https://www.youtube.com/embed/' + videoId + '?autoplay=1&controls=0&loop=1&playlist=' + videoId + '&modestbranding=1&rel=0&enablejsapi=1&origin=' + encodeURIComponent(window.location.origin) + '&iv_load_policy=3&cc_load_policy=0';
+        embed.frameBorder = '0';
+        embed.allow = 'autoplay';
+        embed.allowFullscreen = false;
+        embed.style.cssText = 'position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:100vw;height:56.25vw;min-height:100vh;min-width:177.78vh;pointer-events:none;';
+        document.getElementById('player').appendChild(embed);
+
+        var currentVolume = 50;
+        var isMuted = false;
+
+        function sendCommand(func, args) {
+            try {
+                embed.contentWindow.postMessage(JSON.stringify({
+                    event: 'command',
+                    func: func,
+                    args: args || []
+                }), '*');
+            } catch(e) {}
         }
+
+        document.addEventListener('keydown', function(e) {
+            if (e.keyCode === 32) {
+                e.preventDefault();
+                e.stopPropagation();
+            }
+        });
+        document.addEventListener('keyup', function(e) {
+            if (e.keyCode === 32) {
+                e.preventDefault();
+                e.stopPropagation();
+            }
+        });
 
         window.addEventListener('message', function(e) {
-            if (!player || !player.setVolume) return;
             var data = e.data;
             if (data === 'volumeUp') {
                 currentVolume = Math.min(currentVolume + 10, 100);
-                player.setVolume(currentVolume);
+                sendCommand('setVolume', [currentVolume]);
             } else if (data === 'volumeDown') {
                 currentVolume = Math.max(currentVolume - 10, 0);
-                player.setVolume(currentVolume);
+                sendCommand('setVolume', [currentVolume]);
             } else if (data === 'toggleMute') {
                 isMuted = !isMuted;
-                if (isMuted) { player.mute(); } else { player.unMute(); }
+                sendCommand(isMuted ? 'mute' : 'unMute', []);
             } else if (data.type === 'setVolume') {
                 currentVolume = data.volume;
-                player.setVolume(currentVolume);
+                sendCommand('setVolume', [currentVolume]);
             }
         });
+
+        try { window.parent.postMessage({ type: 'proxyReady' }, '*'); } catch(e) {}
     </script>
 </body>
 </html>
