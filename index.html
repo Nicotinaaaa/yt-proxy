@@ -45,12 +45,16 @@
                 },
                 events: {
                     onReady: function(event) {
+                        event.target.mute();
                         event.target.setVolume(50);
                         event.target.setPlaybackQuality('highres');
+                        event.target.playVideo();
                         window.parent.postMessage({ type: 'proxyReady' }, '*');
-                        setTimeout(function() {
-                            event.target.unMute();
-                        }, 1000);
+                    },
+                    onStateChange: function(event) {
+                        if (event.data === YT.PlayerState.PAUSED) {
+                            event.target.playVideo();
+                        }
                     }
                 }
             });
