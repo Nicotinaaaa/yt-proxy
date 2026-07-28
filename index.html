@@ -22,7 +22,7 @@
         var player;
         var videoId;
         var currentVolume = 30;
-        var isMuted = true;
+        var isMuted = false;
 
         function setMaxQuality() {
             if (!player || !player.setPlaybackQuality) return;
@@ -47,7 +47,6 @@
                 videoId: videoId,
                 playerVars: {
                     autoplay: 1,
-                    mute: 1,
                     controls: 0,
                     loop: 1,
                     rel: 0,
@@ -60,10 +59,8 @@
                 },
                 events: {
                     onReady: function(event) {
-                        event.target.setVolume(currentVolume);
+                        event.target.setVolume(50);
                         setMaxQuality();
-                        event.target.unMute();
-                        event.target.mute();
                         try { window.parent.postMessage({ type: 'proxyReady' }, '*'); } catch(e) {}
                     },
                     onStateChange: function(event) {
