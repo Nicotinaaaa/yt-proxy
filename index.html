@@ -1,17 +1,4 @@
 <!DOCTYPE html>
-<!-- 
-    PROXY PER YOUTUBE - FIVEM LOADING SCREEN
-    ==========================================
-    Questo file va caricato su un repo GitHub con GitHub Pages attivo.
-    Usalo COME FALLBACK se il video non parte con l'embed diretto.
-    
-    Per deploy:
-    1. Crea un repo GitHub (es. "yt-proxy")
-    2. Carica QUESTO file come "index.html"
-    3. Vai a Settings > Pages > seleziona "main" branch > Save
-    4. Usa l'URL "https://TUOUSERNAME.github.io/yt-proxy/?v=VIDEO_ID"
-       nel tuo index.html come iframe src
--->
 <html lang="en">
 <head>
     <meta charset="UTF-8">
@@ -20,72 +7,60 @@
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
         html, body { width: 100%; height: 100%; background: #000; overflow: hidden; }
-        #player { width: 100%; height: 100%; pointer-events: none; }
+        #player { width: 100%; height: 100%; }
+        #player iframe { width: 100%; height: 100%; pointer-events: none; }
+        #fallback { display: none; }
     </style>
 </head>
 <body>
     <div id="player"></div>
+    <div id="fallback"></div>
     <script>
-        var tag = document.createElement('script');
-        tag.src = 'https://www.youtube.com/iframe_api';
-        var firstScriptTag = document.getElementsByTagName('script')[0];
-        firstScriptTag.parentNode.insertBefore(tag, firstScriptTag);
+        var params = new URLSearchParams(window.location.search);
+        var videoId = params.get('v');
+        if (!videoId) {
+            document.body.innerHTML = '<p style="color:#fff;font-family:Arial;text-align:center;padding:20px;">No video specified</p>';
+            throw new Error('No video ID');
+        }
 
-        var player;
-        var videoId;
+        var embed = document.createElement('iframe');
+        embed.src = 'https://www.youtube.com/embed/' + videoId + '?autoplay=1&mute=1&controls=0&loop=1&playlist=' + videoId + '&modestbranding=1&rel=0&enablejsapi=1&origin=' + encodeURIComponent(window.location.origin);
+        embed.frameBorder = '0';
+        embed.allow = 'autoplay; encrypted-media';
+        embed.allowFullscreen = false;
+        document.getElementById('player').appendChild(embed);
 
-        function onYouTubeIframeAPIReady() {
-            var params = new URLSearchParams(window.location.search);
-            videoId = params.get('v');
-            if (!videoId) {
-                document.body.innerHTML = '<p style="color:#fff;font-family:Arial;text-align:center;padding:20px;">No video specified</p>';
-                return;
-            }
-            player = new YT.Player('player', {
-                height: '100%',
-                width: '100%',
-                videoId: videoId,
-                playerVars: {
-                    autoplay: 1,
-                    mute: 1,
-                    controls: 0,
-                    loop: 1,
-                    rel: 0,
-                    modestbranding: 1,
-                    playsinline: 1,
-                    playlist: videoId,
-                    enablejsapi: 1
-                },
-                events: {
-                    onReady: function(event) {
-                        event.target.setVolume(30);
-                        event.target.setPlaybackQuality('highres');
-                        // Avvisa il genitore che il player è pronto
-                        window.parent.postMessage({ type: 'proxyReady' }, '*');
-                    }
-                }
-            });
+        var currentVolume = 30;
+        var isMuted = true;
+
+        function sendCommand(func, args) {
+            try {
+                embed.contentWindow.postMessage(JSON.stringify({
+                    event: 'command',
+                    func: func,
+                    args: args || []
+                }), '*');
+            } catch(e) {}
         }
 
         window.addEventListener('message', function(e) {
-            if (!player || !player.setVolume) return;
             var data = e.data;
-            if (data === 'toggleMute') {
-                if (player.isMuted()) {
-                    player.unMute();
-                } else {
-                    player.mute();
-                }
-            } else if (data.type === 'setVolume') {
-                player.setVolume(data.volume);
-            } else if (data === 'volumeUp') {
-                var vol = Math.min(player.getVolume() + 10, 100);
-                player.setVolume(vol);
+            if (data === 'volumeUp') {
+                currentVolume = Math.min(currentVolume + 10, 100);
+                sendCommand('setVolume', [currentVolume]);
             } else if (data === 'volumeDown') {
-                var vol = Math.max(player.getVolume() - 10, 0);
-                player.setVolume(vol);
+                currentVolume = Math.max(currentVolume - 10, 0);
+                sendCommand('setVolume', [currentVolume]);
+            } else if (data === 'toggleMute') {
+                isMuted = !isMuted;
+                sendCommand(isMuted ? 'mute' : 'unMute', []);
+            } else if (data.type === 'setVolume') {
+                currentVolume = data.volume;
+                sendCommand('setVolume', [currentVolume]);
             }
         });
+
+        try { window.parent.postMessage({ type: 'proxyReady' }, '*'); } catch(e) {}
     </script>
 </body>
 </html>
