@@ -24,6 +24,16 @@
         var currentVolume = 30;
         var isMuted = true;
 
+        function setMaxQuality() {
+            if (!player || !player.setPlaybackQuality) return;
+            var qualities = ['highres', 'hd2160', 'hd1440', 'hd1080'];
+            for (var i = 0; i < qualities.length; i++) {
+                try {
+                    player.setPlaybackQuality(qualities[i]);
+                } catch(e) {}
+            }
+        }
+
         function onYouTubeIframeAPIReady() {
             var params = new URLSearchParams(window.location.search);
             videoId = params.get('v');
@@ -43,28 +53,26 @@
                     rel: 0,
                     modestbranding: 1,
                     playsinline: 1,
+                    iv_load_policy: 3,
                     playlist: videoId,
                     enablejsapi: 1,
-                    origin: window.location.origin,
-                    hl: 'it'
+                    origin: window.location.origin
                 },
                 events: {
                     onReady: function(event) {
                         event.target.setVolume(currentVolume);
-                        event.target.setPlaybackQuality('highres');
+                        setMaxQuality();
                         event.target.unMute();
                         event.target.mute();
-                        try { event.target.setOption('captions', 'track', {}); } catch(e) {}
-                        try {
-                            var tracks = event.target.getOption('captions', 'tracklist');
-                            if (tracks && tracks.length) {
-                                event.target.setOption('captions', 'reload', true);
-                            }
-                        } catch(e) {}
                         try { window.parent.postMessage({ type: 'proxyReady' }, '*'); } catch(e) {}
                     },
-                    onError: function(event) {
-                        try { window.parent.postMessage({ type: 'proxyError', data: event.data }, '*'); } catch(e) {}
+                    onStateChange: function(event) {
+                        if (event.data === YT.PlayerState.PLAYING || event.data === YT.PlayerState.BUFFERING) {
+                            setMaxQuality();
+                        }
+                    },
+                    onPlaybackQualityChange: function(event) {
+                        setMaxQuality();
                     }
                 }
             });
