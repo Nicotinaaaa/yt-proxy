@@ -24,7 +24,7 @@
         }
 
         var embed = document.createElement('iframe');
-        embed.src = 'https://www.youtube.com/embed/' + videoId + '?autoplay=1&mute=1&controls=0&loop=1&playlist=' + videoId + '&modestbranding=1&rel=0&enablejsapi=1&origin=' + encodeURIComponent(window.location.origin);
+        embed.src = 'https://www.youtube.com/embed/' + videoId + '?autoplay=1&mute=1&controls=0&loop=1&playlist=' + videoId + '&modestbranding=1&rel=0&enablejsapi=1&origin=' + encodeURIComponent(window.location.origin) + '&cc_load_policy=0';
         embed.frameBorder = '0';
         embed.allow = 'autoplay; encrypted-media';
         embed.allowFullscreen = false;
